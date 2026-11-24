@@ -1,0 +1,160 @@
+{
+  "account_id": "111122223333",
+  "region": "us-east-1",
+  "agents": [
+    {
+      "agent_id": "AGENT00001",
+      "agent_name": "support-bot",
+      "status": "PREPARED",
+      "agent_arn": "arn:aws:bedrock:us-east-1:111122223333:agent/AGENT00001",
+      "foundation_model": "example.model-v1",
+      "guardrail": null,
+      "role": {
+        "arn": "arn:aws:iam::111122223333:role/support-bot-role",
+        "name": "support-bot-role",
+        "trust_policy": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {"Effect": "Allow", "Principal": {"Service": "bedrock.amazonaws.com"}, "Action": "sts:AssumeRole"}
+          ]
+        },
+        "inline_policies": [],
+        "attached_policies": [
+          {"name": "AdministratorAccess", "arn": "arn:aws:iam::aws:policy/AdministratorAccess", "document": null}
+        ],
+        "permissions_boundary": null
+      },
+      "action_groups": [
+        {"name": "CodeRunner", "state": "ENABLED", "signature": "AMAZON.CodeInterpreter",
+         "executor": null, "lambda_arn": null, "lambda_role": null}
+      ],
+      "knowledge_bases": []
+    },
+    {
+      "agent_id": "AGENT00002",
+      "agent_name": "billing-agent",
+      "status": "PREPARED",
+      "agent_arn": "arn:aws:bedrock:us-east-1:111122223333:agent/AGENT00002",
+      "foundation_model": "example.model-v1",
+      "guardrail": {"id": "gr-abc123", "version": "1"},
+      "role": {
+        "arn": "arn:aws:iam::111122223333:role/billing-agent-role",
+        "name": "billing-agent-role",
+        "trust_policy": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {"Service": "bedrock.amazonaws.com"},
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {"aws:SourceAccount": "111122223333"},
+                "ArnLike": {"aws:SourceArn": "arn:aws:bedrock:us-east-1:111122223333:agent/*"}
+              }
+            }
+          ]
+        },
+        "inline_policies": [
+          {
+            "name": "invoke-one-model",
+            "document": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "bedrock:InvokeModel",
+                  "Resource": "arn:aws:bedrock:us-east-1::foundation-model/example.model-v1"
+                }
+              ]
+            }
+          }
+        ],
+        "attached_policies": [],
+        "permissions_boundary": null
+      },
+      "action_groups": [
+        {
+          "name": "InvoiceLookup",
+          "state": "ENABLED",
+          "signature": null,
+          "executor": "lambda",
+          "lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:invoice-lookup",
+          "lambda_role": {
+            "arn": "arn:aws:iam::111122223333:role/invoice-lookup-role",
+            "name": "invoice-lookup-role",
+            "trust_policy": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {"Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}
+              ]
+            },
+            "inline_policies": [
+              {
+                "name": "tool-access",
+                "document": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": ["secretsmanager:GetSecretValue", "iam:PassRole", "dynamodb:*"],
+                      "Resource": "*"
+                    }
+                  ]
+                }
+              }
+            ],
+            "attached_policies": [],
+            "permissions_boundary": null
+          }
+        }
+      ],
+      "knowledge_bases": []
+    },
+    {
+      "agent_id": "AGENT00003",
+      "agent_name": "faq-agent",
+      "status": "PREPARED",
+      "agent_arn": "arn:aws:bedrock:us-east-1:111122223333:agent/AGENT00003",
+      "foundation_model": "example.model-v1",
+      "guardrail": {"id": "gr-abc123", "version": "1"},
+      "role": {
+        "arn": "arn:aws:iam::111122223333:role/faq-agent-role",
+        "name": "faq-agent-role",
+        "trust_policy": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {"Service": "bedrock.amazonaws.com"},
+              "Action": "sts:AssumeRole",
+              "Condition": {"StringEquals": {"aws:SourceAccount": "111122223333"}}
+            }
+          ]
+        },
+        "inline_policies": [
+          {
+            "name": "scoped",
+            "document": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": ["bedrock:InvokeModel", "s3:GetObject"],
+                  "Resource": [
+                    "arn:aws:bedrock:us-east-1::foundation-model/example.model-v1",
+                    "arn:aws:s3:::faq-docs-bucket/*"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "attached_policies": [],
+        "permissions_boundary": null
+      },
+      "action_groups": [],
+      "knowledge_bases": []
+    }
+  ],
+  "errors": []
+}
